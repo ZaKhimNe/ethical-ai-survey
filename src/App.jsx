@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 const SB_URL = import.meta.env.VITE_SUPABASE_URL
 const SB_KEY = import.meta.env.VITE_SUPABASE_KEY
@@ -32,6 +32,9 @@ async function submitResponses(code, region, answers) {
     scenario_id: a.scenario_id,
     choice: a.choice,
     region,
+    time_spent_ms: a.time_spent_ms ?? null,
+    total_time_ms: a.total_time_ms ?? null,
+    flags: a.flags ?? null,
   }))
   const res = await fetch(`${SB_URL}/rest/v1/responses`, {
     method: "POST",
@@ -573,6 +576,12 @@ export default function App() {
   })
   const [errorMsg, setErrorMsg]   = useState("")
 
+  const scenarioStartRef = useRef(null)
+  const surveyStartRef   = useRef(null)
+  const timingsRef       = useRef({})
+
+  useEffect(() => { scenarioStartRef.current = Date.now() }, [current])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const c = (params.get("code") || "").toUpperCase().replace(/-/g, "")
@@ -612,9 +621,24 @@ export default function App() {
 
   async function handleSubmit() {
     setPhase("submitting")
-    const answerList = Object.entries(answers).map(([sid, choice]) => ({
-      scenario_id: parseInt(sid), choice,
-    }))
+    const totalTimeMs = surveyStartRef.current ? Date.now() - surveyStartRef.current : null
+    const choices     = Object.values(answers)
+    const straightLine = choices.length > 0 && choices.every((c) => c === choices[0])
+
+    const answerList = Object.entries(answers).map(([sid, choice]) => {
+      const timeMs  = timingsRef.current[sid] ?? null
+      const rowFlags = []
+      if (timeMs !== null && timeMs < 8_000)           rowFlags.push("fast_read")
+      if (totalTimeMs !== null && totalTimeMs < 300_000) rowFlags.push("fast_completion")
+      if (straightLine)                                 rowFlags.push("straight_line")
+      return {
+        scenario_id:  parseInt(sid),
+        choice,
+        time_spent_ms: timeMs,
+        total_time_ms: totalTimeMs,
+        flags: rowFlags.join(",") || null,
+      }
+    })
     const ok = await submitResponses(code, region, answerList)
     if (ok) {
       localStorage.removeItem(`answers_${code}`)
@@ -735,7 +759,7 @@ export default function App() {
                   ))}
                 </div>
                 <div className="A-region-cta">
-                  <button className="A-btn" disabled={!region} onClick={() => setPhase("survey")}>
+                  <button className="A-btn" disabled={!region} onClick={() => { surveyStartRef.current = Date.now(); setPhase("survey") }}>
                     Bắt đầu trả lời <span className="A-btn__arrow">→</span>
                   </button>
                 </div>
@@ -780,13 +804,17 @@ export default function App() {
                         <button
                           key={letter}
                           className={`A-option ${selected ? "A-option--on" : ""}`}
-                          onClick={() =>
+                          onClick={() => {
+                            const sid = currentScenario.id
+                            if (!timingsRef.current[sid]) {
+                              timingsRef.current[sid] = Date.now() - (scenarioStartRef.current ?? Date.now())
+                            }
                             setAnswers((prev) => {
-                              const next = { ...prev, [currentScenario.id]: letter }
+                              const next = { ...prev, [sid]: letter }
                               localStorage.setItem(`answers_${code}`, JSON.stringify(next))
                               return next
                             })
-                          }
+                          }}
                         >
                           <div className="A-option__head">
                             <span className="A-option__letter A-mono">{letter}</span>
