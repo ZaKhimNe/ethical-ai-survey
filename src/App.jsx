@@ -32,8 +32,8 @@ async function submitResponses(code, region, answers) {
     scenario_id: a.scenario_id,
     choice: a.choice,
     region,
-    time_spent_ms: a.time_spent_ms ?? null,
-    total_time_ms: a.total_time_ms ?? null,
+    time_spent_s: a.time_spent_s ?? null,
+    total_time_s: a.total_time_s ?? null,
     flags: a.flags ?? null,
   }))
   const res = await fetch(`${SB_URL}/rest/v1/responses`, {
@@ -621,21 +621,21 @@ export default function App() {
 
   async function handleSubmit() {
     setPhase("submitting")
-    const totalTimeMs = surveyStartRef.current ? Date.now() - surveyStartRef.current : null
-    const choices     = Object.values(answers)
+    const totalTimeS = surveyStartRef.current ? Math.round((Date.now() - surveyStartRef.current) / 1000) : null
+    const choices    = Object.values(answers)
     const straightLine = choices.length > 0 && choices.every((c) => c === choices[0])
 
     const answerList = Object.entries(answers).map(([sid, choice]) => {
-      const timeMs  = timingsRef.current[sid] ?? null
+      const timeS    = timingsRef.current[sid] ?? null
       const rowFlags = []
-      if (timeMs !== null && timeMs < 8_000)           rowFlags.push("fast_read")
-      if (totalTimeMs !== null && totalTimeMs < 300_000) rowFlags.push("fast_completion")
-      if (straightLine)                                 rowFlags.push("straight_line")
+      if (timeS !== null && timeS < 8)    rowFlags.push("fast_read")
+      if (totalTimeS !== null && totalTimeS < 300) rowFlags.push("fast_completion")
+      if (straightLine)                   rowFlags.push("straight_line")
       return {
         scenario_id:  parseInt(sid),
         choice,
-        time_spent_ms: timeMs,
-        total_time_ms: totalTimeMs,
+        time_spent_s: timeS,
+        total_time_s: totalTimeS,
         flags: rowFlags.join(",") || null,
       }
     })
@@ -807,7 +807,7 @@ export default function App() {
                           onClick={() => {
                             const sid = currentScenario.id
                             if (!timingsRef.current[sid]) {
-                              timingsRef.current[sid] = Date.now() - (scenarioStartRef.current ?? Date.now())
+                              timingsRef.current[sid] = Math.round((Date.now() - (scenarioStartRef.current ?? Date.now())) / 1000)
                             }
                             setAnswers((prev) => {
                               const next = { ...prev, [sid]: letter }
