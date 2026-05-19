@@ -348,25 +348,28 @@ const styles = `
   }
 `
 
+const urlCode = new URLSearchParams(window.location.search)
+  .get("code")?.toUpperCase() || ""
+
 export default function App() {
   const [phase, setPhase]         = useState("loading")
-  const [code, setCode]           = useState("")
+  const [code, setCode]           = useState(urlCode)
   const [codeInput, setCodeInput] = useState("")
   const [codeError, setCodeError] = useState("")
   const [region, setRegion]       = useState("")
   const [scenarios, setScenarios] = useState([])
-  const [current, setCurrent]     = useState(0)
-  const [answers, setAnswers]     = useState(() => {
+  const [current, setCurrent]     = useState(() => {
+    if (!urlCode) return 0
     try {
-      const saved = localStorage.getItem(`answers_${code}`)
+      return parseInt(localStorage.getItem(`current_${urlCode}`)) || 0
+    } catch { return 0 }
+  })
+  const [answers, setAnswers]     = useState(() => {
+    if (!urlCode) return {}
+    try {
+      const saved = localStorage.getItem(`answers_${urlCode}`)
       return saved ? JSON.parse(saved) : {}
     } catch { return {} }
-  })
-
-  const [savedCurrent, setSavedCurrent] = useState(() => {
-    try {
-      return parseInt(localStorage.getItem(`current_${code}`)) || 0
-    } catch { return 0 }
   })
 
   const [errorMsg, setErrorMsg]   = useState("")
