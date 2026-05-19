@@ -516,8 +516,8 @@ const styles = `
   }
 `
 
-const urlCode = new URLSearchParams(window.location.search)
-  .get("code")?.toUpperCase() || ""
+const urlCode = (new URLSearchParams(window.location.search)
+  .get("code") || "").toUpperCase().replace(/-/g, "")
 
 function seededShuffle(arr, seed) {
   const a = [...arr]
@@ -604,9 +604,10 @@ export default function App() {
 
   function handleCodeSubmit() {
     setCodeError("")
-    if (!codeInput.trim()) { setCodeError("Vui lòng nhập mã tham gia."); return }
-    setCode(codeInput.trim())
-    loadSurvey(codeInput.trim())
+    const normalized = codeInput.trim().replace(/-/g, "")
+    if (!normalized) { setCodeError("Vui lòng nhập mã tham gia."); return }
+    setCode(normalized)
+    loadSurvey(normalized)
   }
 
   async function handleSubmit() {
@@ -687,7 +688,7 @@ export default function App() {
                 <div className="A-code-row">
                   <input
                     className="A-code-input"
-                    placeholder="VN—001"
+                    placeholder="VN001"
                     maxLength={8}
                     autoFocus
                     value={codeInput}
