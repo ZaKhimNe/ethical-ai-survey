@@ -189,9 +189,9 @@ const styles = `
 
   .action-text {
     display: block;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.6;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.65;
     margin-bottom: 10px;
   }
 
@@ -205,19 +205,20 @@ const styles = `
     color: #444;
   }
 
-  .option-btn.selected .consequence {
-    color: rgba(255,255,255,0.8);
-    background: rgba(255,255,255,0.08);
-  }
-
   .consequence.good {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(39, 174, 96, 0.07);
     border-left: 3px solid #27ae60;
   }
 
   .consequence.bad {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(231, 76, 60, 0.07);
     border-left: 3px solid #e74c3c;
+  }
+
+  .option-btn.selected .consequence {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.85);
+    border-left-color: rgba(255,255,255,0.4);
   }
 
   .consequence-label {
@@ -227,7 +228,7 @@ const styles = `
     text-transform: uppercase;
     letter-spacing: 0.8px;
     margin-bottom: 4px;
-    opacity: 0.6;
+    opacity: 0.55;
   }
 
   .nav {
@@ -351,6 +352,17 @@ const styles = `
 const urlCode = new URLSearchParams(window.location.search)
   .get("code")?.toUpperCase() || ""
 
+function seededShuffle(arr, seed) {
+  const a = [...arr]
+  let s = seed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) % 2 ** 32
+    const j = Math.abs(s) % (i + 1)
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export default function App() {
   const [phase, setPhase]         = useState("loading")
   const [code, setCode]           = useState(urlCode)
@@ -400,7 +412,7 @@ export default function App() {
         setPhase("error")
         return
       }
-      const shuffled = [...data].sort(() => Math.random() - 0.5)
+      const shuffled = seededShuffle(data, c)
       setScenarios(shuffled)
       const savedIdx = parseInt(localStorage.getItem(`current_${c}`)) || 0
       setCurrent(savedIdx)
