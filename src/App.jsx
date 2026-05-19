@@ -869,6 +869,10 @@ export default function App() {
                   <span className="A-mono">PHƯƠNG ÁN HÀNH ĐỘNG</span>
                 </div>
 
+                <p style={{ fontFamily: "'Spectral', serif", fontStyle: "italic", fontSize: 13, color: "var(--ink-faint)", marginBottom: 16, textAlign: "center" }}>
+                  Hãy chọn dựa trên góc nhìn cá nhân của bạn.
+                </p>
+
                 <div className="A-options">
                   {["option_1", "option_2", "option_3"]
                     .filter((k) => currentScenario[k]?.trim())
