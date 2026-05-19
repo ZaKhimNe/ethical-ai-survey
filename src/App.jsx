@@ -221,6 +221,18 @@ const styles = `
     border-left-color: rgba(255,255,255,0.4);
   }
 
+  .consequence.neutral {
+    background: rgba(0,0,0,0.04);
+    border-left: 3px solid #95a5a6;
+    color: #555;
+  }
+
+  .option-btn.selected .consequence.neutral {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.75);
+    border-left-color: rgba(255,255,255,0.3);
+  }
+
   .consequence-label {
     display: block;
     font-size: 10px;
@@ -553,29 +565,49 @@ export default function App() {
                         <span className="option-text">
                           {(() => {
                             const text = currentScenario[k]
-                            const parts = text.split(/\*Hệ quả tốt\*|\*HỆ QUẢ TỐT\*|HỆ QUẢ TỐT:|Hệ quả tốt:/)
-                            const action = parts[0].trim()
-                            const rest   = parts[1] || ""
-                            const consequences = rest.split(/\*Hệ quả xấu\*|\*HỆ QUẢ XẤU\*|HỆ QUẢ XẤU:|Hệ quả xấu:/)
-                            const good = consequences[0]?.trim()
-                            const bad  = consequences[1]?.trim()
-                            return (
-                              <>
-                                <span className="action-text">{action}</span>
-                                {good && (
-                                  <span className="consequence good">
-                                    <span className="consequence-label">✓ Hệ quả tốt</span>
-                                    {good}
+                            const goodMarkers = /\*?Hệ quả tốt\*?:?|\*?HỆ QUẢ TỐT\*?:?/
+                            const badMarkers  = /\*?Hệ quả xấu\*?:?|\*?HỆ QUẢ XẤU\*?:?/
+                            const hasFormat = goodMarkers.test(text) || badMarkers.test(text)
+                            if (hasFormat) {
+                              const parts = text.split(goodMarkers)
+                              const action = parts[0].trim()
+                              const rest   = parts[1] || ""
+                              const subparts = rest.split(badMarkers)
+                              const good = subparts[0]?.trim()
+                              const bad  = subparts[1]?.trim()
+                              return (
+                                <>
+                                  <span className="action-text">{action}</span>
+                                  {good && (
+                                    <span className="consequence good">
+                                      <span className="consequence-label">✓ Hệ quả tốt</span>
+                                      {good}
+                                    </span>
+                                  )}
+                                  {bad && (
+                                    <span className="consequence bad">
+                                      <span className="consequence-label">✗ Hệ quả xấu</span>
+                                      {bad}
+                                    </span>
+                                  )}
+                                </>
+                              )
+                            }
+                            const splitPoint = text.search(/\. ?(Tuy nhiên|Nhưng|Song|Tuy vậy)/i)
+                            if (splitPoint > 0) {
+                              const action   = text.slice(0, splitPoint + 1).trim()
+                              const tradeoff = text.slice(splitPoint + 1).trim()
+                              return (
+                                <>
+                                  <span className="action-text">{action}</span>
+                                  <span className="consequence neutral">
+                                    <span className="consequence-label">↔ Đánh đổi</span>
+                                    {tradeoff}
                                   </span>
-                                )}
-                                {bad && (
-                                  <span className="consequence bad">
-                                    <span className="consequence-label">✗ Hệ quả xấu</span>
-                                    {bad}
-                                  </span>
-                                )}
-                              </>
-                            )
+                                </>
+                              )
+                            }
+                            return <span className="action-text">{text}</span>
                           })()}
                         </span>
                       </button>
