@@ -166,7 +166,26 @@ const styles = `
   }
 
   .option-btn.selected .option-letter { opacity: 1; border-color: #fff; }
-  .option-text { font-size: 13px; line-height: 1.6; }
+  .option-text {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .option-text em {
+    font-style: normal;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.75;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-top: 8px;
+  }
+
+  .option-btn.selected .option-text em {
+    opacity: 0.6;
+  }
 
   .nav {
     display: flex;
