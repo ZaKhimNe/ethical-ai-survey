@@ -575,7 +575,7 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const c = params.get("code")?.toUpperCase()
+    const c = (params.get("code") || "").toUpperCase().replace(/-/g, "")
     if (c) { setCode(c); loadSurvey(c) }
     else setPhase("code")
   }, [])
@@ -763,7 +763,7 @@ export default function App() {
                   <div className="A-article__rule" />
                 </div>
                 <h2 className="A-article__title">{currentScenario.title}</h2>
-                <p className="A-article__prompt">{currentScenario.context}</p>
+                <p className="A-article__prompt">{currentScenario.neutral_prompt}</p>
 
                 <div className="A-article__divider">
                   <span className="A-mono">PHƯƠNG ÁN HÀNH ĐỘNG</span>
