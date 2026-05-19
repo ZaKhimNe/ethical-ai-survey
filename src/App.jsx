@@ -187,6 +187,49 @@ const styles = `
     opacity: 0.6;
   }
 
+  .action-text {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .consequence {
+    display: block;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-top: 6px;
+    color: #444;
+  }
+
+  .option-btn.selected .consequence {
+    color: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.08);
+  }
+
+  .consequence.good {
+    background: rgba(0, 0, 0, 0.04);
+    border-left: 3px solid #27ae60;
+  }
+
+  .consequence.bad {
+    background: rgba(0, 0, 0, 0.04);
+    border-left: 3px solid #e74c3c;
+  }
+
+  .consequence-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+    opacity: 0.6;
+  }
+
   .nav {
     display: flex;
     justify-content: space-between;
@@ -492,7 +535,34 @@ export default function App() {
                         }
                       >
                         <span className="option-letter">{letter}</span>
-                        <span className="option-text">{currentScenario[k]}</span>
+                        <span className="option-text">
+                          {(() => {
+                            const text = currentScenario[k]
+                            const parts = text.split(/\*Hệ quả tốt\*|\*HỆ QUẢ TỐT\*|HỆ QUẢ TỐT:|Hệ quả tốt:/)
+                            const action = parts[0].trim()
+                            const rest   = parts[1] || ""
+                            const consequences = rest.split(/\*Hệ quả xấu\*|\*HỆ QUẢ XẤU\*|HỆ QUẢ XẤU:|Hệ quả xấu:/)
+                            const good = consequences[0]?.trim()
+                            const bad  = consequences[1]?.trim()
+                            return (
+                              <>
+                                <span className="action-text">{action}</span>
+                                {good && (
+                                  <span className="consequence good">
+                                    <span className="consequence-label">✓ Hệ quả tốt</span>
+                                    {good}
+                                  </span>
+                                )}
+                                {bad && (
+                                  <span className="consequence bad">
+                                    <span className="consequence-label">✗ Hệ quả xấu</span>
+                                    {bad}
+                                  </span>
+                                )}
+                              </>
+                            )
+                          })()}
+                        </span>
                       </button>
                     )
                   })}
