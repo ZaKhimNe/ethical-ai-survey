@@ -26,11 +26,11 @@ async function fetchScenarios(ids) {
   return res.json()
 }
 
-async function submitRespondent(code, name, phone) {
+async function submitRespondent(code, name) {
   const res = await fetch(`${SB_URL}/rest/v1/respondents`, {
     method: "POST",
     headers: { ...headers, Prefer: "return=minimal,resolution=merge-duplicates" },
-    body: JSON.stringify({ code, name, phone }),
+    body: JSON.stringify({ code, name }),
   })
   return res.ok
 }
@@ -609,7 +609,6 @@ export default function App() {
   })
   const [errorMsg, setErrorMsg]   = useState("")
   const [nameInput, setNameInput] = useState("")
-  const [phoneInput, setPhoneInput] = useState("")
   const [infoError, setInfoError] = useState("")
 
   const scenarioStartRef = useRef(null)
@@ -657,10 +656,9 @@ export default function App() {
 
   async function handleInfoSubmit() {
     const n = nameInput.trim()
-    const p = phoneInput.trim()
-    if (!n || !p) { setInfoError("Vui lòng điền đầy đủ họ tên và số điện thoại."); return }
+    if (!n) { setInfoError("Vui lòng nhập họ và tên."); return }
     setInfoError("")
-    await submitRespondent(code, n, p)
+    await submitRespondent(code, n)
     surveyStartRef.current = Date.now()
     setPhase("survey")
   }
@@ -833,17 +831,6 @@ export default function App() {
                       autoFocus
                       value={nameInput}
                       onChange={(e) => { setNameInput(e.target.value); setInfoError("") }}
-                      onKeyDown={(e) => e.key === "Enter" && handleInfoSubmit()}
-                    />
-                  </div>
-                  <div className="A-field">
-                    <label className="A-field__label">Số điện thoại</label>
-                    <input
-                      className="A-text-input"
-                      type="tel"
-                      placeholder="0912 345 678"
-                      value={phoneInput}
-                      onChange={(e) => { setPhoneInput(e.target.value); setInfoError("") }}
                       onKeyDown={(e) => e.key === "Enter" && handleInfoSubmit()}
                     />
                   </div>
