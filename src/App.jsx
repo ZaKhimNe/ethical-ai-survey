@@ -26,6 +26,15 @@ async function fetchScenarios(ids) {
   return res.json()
 }
 
+async function submitRespondent(code, name, phone) {
+  const res = await fetch(`${SB_URL}/rest/v1/respondents`, {
+    method: "POST",
+    headers: { ...headers, Prefer: "return=minimal,resolution=merge-duplicates" },
+    body: JSON.stringify({ code, name, phone }),
+  })
+  return res.ok
+}
+
 async function submitResponses(code, region, answers) {
   const rows = answers.map((a) => ({
     code,
@@ -213,6 +222,30 @@ const styles = `
   .A-code-input:focus { border-bottom-color: var(--oxide); }
 
   .A-err { color: var(--oxide); font-size: 13px; margin-top: 8px; font-style: italic; }
+
+  .A-field { display: flex; flex-direction: column; gap: 6px; text-align: left; width: 100%; max-width: 420px; margin: 0 auto; }
+  .A-field + .A-field { margin-top: 20px; }
+  .A-field__label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .A-text-input {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--ink);
+    padding: 10px 4px 8px;
+    color: var(--ink);
+    width: 100%;
+    outline: none;
+    transition: border-bottom-color 0.18s ease;
+  }
+  .A-text-input::placeholder { color: var(--ink-faint); opacity: 0.5; }
+  .A-text-input:focus { border-bottom-color: var(--oxide); }
 
   .A-footnote {
     font-family: 'Spectral', serif;
@@ -575,6 +608,9 @@ export default function App() {
     } catch { return {} }
   })
   const [errorMsg, setErrorMsg]   = useState("")
+  const [nameInput, setNameInput] = useState("")
+  const [phoneInput, setPhoneInput] = useState("")
+  const [infoError, setInfoError] = useState("")
 
   const scenarioStartRef = useRef(null)
   const surveyStartRef   = useRef(null)
@@ -619,6 +655,16 @@ export default function App() {
     loadSurvey(normalized)
   }
 
+  async function handleInfoSubmit() {
+    const n = nameInput.trim()
+    const p = phoneInput.trim()
+    if (!n || !p) { setInfoError("Vui lòng điền đầy đủ họ tên và số điện thoại."); return }
+    setInfoError("")
+    await submitRespondent(code, n, p)
+    surveyStartRef.current = Date.now()
+    setPhase("survey")
+  }
+
   async function handleSubmit() {
     setPhase("submitting")
     const totalTimeS = surveyStartRef.current ? Math.round((Date.now() - surveyStartRef.current) / 1000) : null
@@ -657,11 +703,12 @@ export default function App() {
 
   const phaseSubtitle = {
     loading:    null,
-    code:       "Phần 1 / 4 · Mã tham gia",
-    region:     "Phần 2 / 4 · Nhân khẩu học",
-    survey:     "Phần 3 / 4 · Tình huống đạo đức",
+    code:       "Phần 1 / 5 · Mã tham gia",
+    region:     "Phần 2 / 5 · Nhân khẩu học",
+    info:       "Phần 3 / 5 · Thông tin cá nhân",
+    survey:     "Phần 4 / 5 · Tình huống đạo đức",
     submitting: null,
-    done:       "Phần 4 / 4 · Ghi nhận",
+    done:       "Phần 5 / 5 · Ghi nhận",
     error:      null,
   }[phase]
 
@@ -759,10 +806,52 @@ export default function App() {
                   ))}
                 </div>
                 <div className="A-region-cta">
-                  <button className="A-btn" disabled={!region} onClick={() => { surveyStartRef.current = Date.now(); setPhase("survey") }}>
+                  <button className="A-btn" disabled={!region} onClick={() => setPhase("info")}>
                     Bắt đầu trả lời <span className="A-btn__arrow">→</span>
                   </button>
                 </div>
+              </div>
+            </section>
+          )}
+
+          {phase === "info" && (
+            <section className="A-stage A-stage--center">
+              <div className="A-frame">
+                <div className="A-eyebrow A-mono">§ 03 · THÔNG TIN CÁ NHÂN</div>
+                <h2 className="A-h-display">Thông tin người tham gia</h2>
+                <p className="A-lede">
+                  Thông tin được dùng để xác nhận tham gia và liên hệ nếu cần.
+                  Không được công bố trong bất kỳ báo cáo nào.
+                </p>
+                <OrnamentRule />
+                <div style={{ marginTop: 28, marginBottom: 28 }}>
+                  <div className="A-field">
+                    <label className="A-field__label">Họ và tên</label>
+                    <input
+                      className="A-text-input"
+                      placeholder="Nguyễn Văn A"
+                      autoFocus
+                      value={nameInput}
+                      onChange={(e) => { setNameInput(e.target.value); setInfoError("") }}
+                      onKeyDown={(e) => e.key === "Enter" && handleInfoSubmit()}
+                    />
+                  </div>
+                  <div className="A-field">
+                    <label className="A-field__label">Số điện thoại</label>
+                    <input
+                      className="A-text-input"
+                      type="tel"
+                      placeholder="0912 345 678"
+                      value={phoneInput}
+                      onChange={(e) => { setPhoneInput(e.target.value); setInfoError("") }}
+                      onKeyDown={(e) => e.key === "Enter" && handleInfoSubmit()}
+                    />
+                  </div>
+                </div>
+                {infoError && <p className="A-err">{infoError}</p>}
+                <button className="A-btn" onClick={handleInfoSubmit}>
+                  Bắt đầu khảo sát <span className="A-btn__arrow">→</span>
+                </button>
               </div>
             </section>
           )}
